@@ -1,0 +1,523 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>HTML5 FALLDOWN</title>
+    </head>
+    <body>
+        <section>
+
+            <div>
+                <canvas id="canvas" width=device-width height=device-height">
+                    This text is displayed if your browser does not support HTML5 Canvas.
+                </canvas>
+            </div>
+
+            <script type="text/javascript">
+                
+                var WIDTH = 640;
+                var HEIGHT = 960;
+                var canvas;
+                var ctx;
+                var dx = 4;
+                var inertia = 0;
+                var x = WIDTH/2;
+                var y = 50;
+                var up = false;
+                var down = false;
+                var left = false;
+                var right = false;
+                var space = false;
+                var speedTime = 1;
+                var stopTime = 1;
+                var platformX = [];
+                var platformY = [];
+                var increment = 0;
+                var incrementComp = 125;
+                var fallInc = 5;
+                var score = 0;
+                var onPlatform = false;
+                var numPlatforms = 0;
+                var dificulty = 25;
+                var intervalSpeed;
+                var addUpgrade = false;
+                var upgradeX = [];
+                var upgradeY = [];
+                var upgradeType = [];
+                var currentUpgrades = [];
+                var platformColor = "#00FF00";
+                canvas = document.getElementById("canvas");
+                ctx = canvas.getContext("2d");
+                intervalSpeed=setInterval(moveUp, dificulty);
+                setInterval(draw,10);
+                setInterval(keepScore,500);
+                setInterval(contact,5);
+                
+                function init(){
+                    platformColor = "#00FF00";
+                    upgradeX = [];
+                    upgradeY = [];
+                    upgradeType = [];
+                    currentUpgrades = [];
+                    addUpgrade=false;
+                    score=0;
+                    platformX = [];
+                    platformY = [];
+                    speedTime=1;
+                    stopTime=1;
+                    numPlatforms = 0;
+                    dificulty= 25;
+                    increment = 0;
+                    incrementComp = 125;
+                    fallInc = 5;
+                    inertia = 0;
+                    dx = 4;
+                    x = WIDTH/2;
+                    y = 50;
+                    up = false;
+                    down = false;
+                    left = false;
+                    right = false;
+                    onPlatform=false;
+                }
+                function resizeGame()
+                {
+                    var canvas = document.getElementById('canvas');
+                    var newWidth = window.innerWidth;
+                    var newHeight = window.innerHeight;
+                    canvas.width = newWidth-30;
+                    canvas.height = newHeight-30;
+                    WIDTH=newWidth;
+                    if(WIDTH>640) WIDTH=640;
+                    HEIGHT=newHeight;
+                    if(HEIGHT>960) HEIGHT=640;
+                    if(HEIGHT>canvas.height)
+                    {
+                        HEIGHT=canvas.height;
+                    }
+                }
+                
+                function keepScore()
+                {
+                    score++;
+                    if(speedTime-1>score)
+                    {
+                        dx=6;
+                    }
+                    else
+                    {
+                        dx=4;
+                    }
+                }
+                function moveUp()
+                {
+                    for(var i=0;i<platformY.length;i++)
+                    {
+                        platformY[i]--;
+                    }
+                    for(var i=0;i<upgradeY.length;i++)
+                    {
+                        upgradeY[i]--;
+                    }
+                    if(onPlatform)
+                    {
+                        y--;
+                    }
+                    if(!onPlatform)
+                    {
+                        y+=fallInc;
+                    }
+                    if(stopTime-1>score)
+                    {
+                        //alert("slower");
+                        dificulty=25;
+                        //increment=(increment/(120/incrementComp))+increment
+                        incrementComp=120;
+                        fallInc = 5;
+                    }
+                    else if(numPlatforms>=320)
+                    {
+                        platformColor = "#FF0000";
+                        dificulty=5;
+                        incrementComp = 37;
+                        fallInc = 1;
+                    }
+                    else if(numPlatforms>=200)
+                    {
+                        platformColor = "#00FFFF";
+                        dificulty=7.5;
+                        incrementComp = 43;
+                        fallInc = 1.5;
+                    }
+                    else if(numPlatforms>=120)
+                    {
+                        platformColor = "#FFFF00";
+                        dificulty=10;
+                        incrementComp = 52;
+                        fallInc = 2;
+                    }
+                    else if(numPlatforms>=60)
+                    {
+                        platformColor = "#0000FF";
+                        dificulty=12.5;
+                        incrementComp = 60;
+                        fallInc = 2.5;
+                    }
+                    else if(numPlatforms>=25)
+                    {
+                        platformColor = "#FF00FF";
+                        dificulty=15;
+                        incrementComp = 72;
+                        fallInc = 3;
+                    }
+                    else if(numPlatforms>=0)
+                    {
+                        platformColor = "#00FF00";
+                        dificulty=25;
+                        incrementComp = 120;
+                        fallInc = 5;
+                    }
+                    window.clearInterval(intervalSpeed);
+                    intervalSpeed=setInterval(moveUp,dificulty);
+                }
+                
+                function addPlatform(x,y)
+                {
+                    //alert("gda");
+                    numPlatforms++;
+                    platformX[platformX.length]=x;
+                    platformY[platformY.length]=y;
+                    if(Math.floor(Math.random()*100)<10)
+                    {
+                        upgradeX[upgradeX.length]=Math.floor(Math.random()*WIDTH);
+                        upgradeY[upgradeY.length]=y;
+                        var tempRand=Math.floor(Math.random()*100);
+                        if(tempRand<=33)
+                        {
+                            upgradeType[upgradeType.length]=0;
+                        }
+                        if(tempRand>33 && tempRand<=66)
+                        {
+                            upgradeType[upgradeType.length]=1;
+                        }
+                        if(tempRand>66)
+                        {
+                            upgradeType[upgradeType.length]=2;
+                        }
+                    }
+                }
+                
+                function drawUpgrades()
+                {
+                    for(var i = 0;i<upgradeX.length;i++)
+                    {
+                        //alert(""+upgradeType[i]);
+                        if(upgradeType[i]==0)
+                        {
+                            ctx.fillStyle="yellow";
+                            circle(upgradeX[i],upgradeY[i]-10,5);
+                        }
+                        if(upgradeType[i]==1)
+                        {
+                            ctx.fillStyle="blue";
+                            circle(upgradeX[i],upgradeY[i]-10,5);
+                        }
+                        if(upgradeType[i]==2)
+                        {
+                            ctx.fillStyle="red";
+                            circle(upgradeX[i],upgradeY[i]-10,5);
+                        }
+                        if(upgradeY[i]<0)
+                        {
+                            upgradeX.splice(i,1);
+                            upgradeY.splice(i,1);
+                            upgradeType.splice(i,1);
+                        }
+                    }
+                }
+                function drawPlatforms()
+                {
+                    for(var i=0;i<platformX.length;i++)
+                    {
+                        //rect(WIDTH/2-6,platformY[i],12,3);
+                        if(platformX[i]<WIDTH/2)
+                        {
+                            rect(0,platformY[i],platformX[i],3);
+                            rect(platformX[i]+30,platformY[i],(WIDTH/2)-platformX[i]-30,3);
+                        }
+                        if(platformX[i]>=WIDTH/2)
+                        {
+                            rect(WIDTH/2,platformY[i],platformX[i]-(WIDTH/2),3);
+                            rect(platformX[i]+30,platformY[i],WIDTH-platformX[i]-30,3);
+                        }
+                        if(platformY[i]<0)
+                        {
+                            platformY.splice(i,1);
+                            platformX.splice(i,1);
+                        }
+                    }
+                }
+                
+                function distance(x1,y1,x2,y2){
+                    return Math.sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+                }
+                
+                function processUpgrades()
+                {
+                    if(speedTime==score) speedTime++;
+                    if(stopTime==score) stopTime++;
+                    for(var i=0;i<currentUpgrades.length;i++)
+                    {
+                        if(currentUpgrades[i]==0)
+                        {
+                            //alert("adding score");
+                            score+=5;
+                            speedTime+=5;
+                            stopTime+=5;
+                        }
+                        if(currentUpgrades[i]==1)
+                        {
+                            //alert("slowing down");
+                            stopTime+=15;
+                        }
+                        if(currentUpgrades[i]==2)
+                        {
+                            //alert("speed up");
+                            speedTime+=15;
+                        }
+                    }
+                    currentUpgrades=[];
+                }
+                
+                function contact()
+                {
+                    //alert("in contact");
+                    for(var i=0;i<platformX.length;i++)
+                    {
+                        if(y>=platformY[i]-3 && y<=platformY[i]+2)
+                        {
+                            //alert("level with a platform");
+                            if(x-8<=platformX[i] || x+8>=platformX[i]+30)
+                            {
+                                //alert("on a platform");
+                                onPlatform=true;
+                            }
+                            else
+                            {
+                                //alert("not on platform, but level");
+                                onPlatform=false;
+                                y+=2;
+                            }
+                        }
+                    }
+                    for(var i=0;i<upgradeX.length;i++)
+                    {
+                        if(distance(upgradeX[i],upgradeY[i],x,y)<15)
+                        {
+                            //alert("contact");
+                            currentUpgrades[currentUpgrades.length]=upgradeType[i];
+                            upgradeX.splice(i,1);
+                            upgradeY.splice(i,1);
+                            upgradeType.splice(i,1);
+                            i--;
+                        }
+                    }
+                }
+
+                function circle(x,y,r) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, r, 0, Math.PI*2, true);
+                    ctx.fill();
+                }
+
+                function rect(x,y,w,h) {
+                    ctx.beginPath();
+                    ctx.rect(x,y,w,h);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                function doKeyUp(evt){
+                    switch (evt.keyCode) {
+                        case 37:  /* Left arrow was released*/
+                            left = false;
+                            break;
+                        case 39:  /* Right arrow was released*/
+                            right = false;
+                            break;
+                    }
+                }
+            
+
+                function doKeyDown(evt){
+                    switch (evt.keyCode) {
+                        case 37:  /* Left arrow was pressed */
+                            left = true;
+                            break;
+                        case 39:  /* Right arrow was pressed */
+                            right = true;
+                            break;   
+                    }
+                }
+                function touchDown(evt)
+                {
+                    //alert("touched"+evt.pageX);
+                    if(evt.pageX>WIDTH/2)
+                    {
+                        right=true;
+                        if(left==true)
+                        {
+                            left=false;
+                        }
+                    }
+                    if(evt.pageX<WIDTH/2)
+                    {
+                        left=true;
+                        if(right==true)
+                        {
+                            right=false;
+                        }
+                    }
+                }
+                function touchUp(evt)
+                {
+                    //alert("released");
+                    if(evt.pageX>WIDTH/2)
+                    {
+                        right=false;
+                    }
+                    if(evt.pageX<WIDTH/2)
+                    {
+                        left=false;
+                    }
+                }
+                function doMouseDown(evt)
+                {
+                    //alert("touched"+evt.pageX);
+                    if(evt.pageX>WIDTH/2)
+                    {
+                        right=true;
+                        if(left==true)
+                        {
+                            left=false;
+                        }
+                    }
+                    if(evt.pageX<WIDTH/2)
+                    {
+                        left=true;
+                        if(right==true)
+                        {
+                            right=false;
+                        }
+                    }
+                }
+                function doMouseUp(evt)
+                {
+                    //alert("released");
+                    if(evt.pageX>WIDTH/2)
+                    {
+                        right=false;
+                    }
+                    if(evt.pageX<WIDTH/2)
+                    {
+                        left=false;
+                    }
+                }
+                
+                function draw() {
+                    resizeGame();
+                    //if(!(stopTime-1>score))
+                    //{
+                    //alert("adding");
+                    increment++;
+                    //}
+                    if(increment>=incrementComp)
+                    {
+                        addPlatform(Math.floor(Math.random()*(WIDTH/2-30)),HEIGHT);
+                        addPlatform(Math.floor(Math.random()*(WIDTH/2-30))+WIDTH/2,HEIGHT);
+                        increment=0;
+                    }
+                    ctx.fillStyle = "black";
+                    ctx.strokeStyle = "black";
+                    rect(0,0,WIDTH,HEIGHT); //clears the screen\
+                    ctx.fillStyle = platformColor;
+                    drawPlatforms();
+                    //contact();
+                    
+                    if (left == true)
+                    {
+                        if(inertia>-1)
+                        {
+                            inertia-=.03;
+                        }
+                    }
+                    else if (right == true)
+                    {
+                        if(inertia<1)
+                        {
+                            inertia+=.03;
+                        }
+                    }
+                    else if (left==false || right==false)
+                    {
+                        if(inertia<0)
+                        {
+                            inertia+=.015;
+                        }
+                        else if(inertia>0)
+                        {
+                            inertia-=.015;
+                        }
+                        else
+                        {
+                            inertia=0;
+                        }
+                        
+                    }
+                    x+=dx*inertia;
+                    
+                    if (y>=HEIGHT-2) y=HEIGHT-2;
+                    if (x<=0)
+                    {
+                        x=0;
+                        inertia = 0;
+                    }
+                    if (x>=WIDTH)
+                    {
+                        x=WIDTH;
+                        inertia = 0;
+                    }
+                    drawUpgrades();
+                    processUpgrades();
+                    ctx.fillStyle = "#CCFF00";
+                    circle(x,y-8,10);
+                    ctx.fillStyle = "#CC0000";
+                    if(dx==6)
+                    {
+                        circle(x,y-8,10);
+                    }
+                    ctx.fillStyle = "white";
+                    
+                    rect(0,0,30,12);
+                    //ctx.fillText(""+dx,1,30);
+                    ctx.fillStyle = "black";
+                    ctx.fillText(""+score,1,10);
+                    if(y-20<=0)
+                    {
+                        alert("GAME OVER!                                                                             Score: "+score);
+                        init();
+                    }
+                }
+                
+                init();
+                window.addEventListener('keydown',doKeyDown,true);
+                window.addEventListener('keyup',doKeyUp, true);
+                window.addEventListener('touchstart',touchDown,true);
+                window.addEventListener('touchend',touchUp,true);
+                window.addEventListener('mousedown', doMouseDown, true);
+                window.addEventListener('mouseup', doMouseUp,true);
+            </script>
+        </section>
+    </body>
+</html>
